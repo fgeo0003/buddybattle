@@ -179,10 +179,11 @@ def check_answer(data):
 
     guess = data["guess"].strip()
     submitting_player = session.get("name")  # Get the name of the player submitting the guess
+    player_sid = request.sid  # Get the session ID of the player
 
     # Ensure the submitting player is in the room
     if submitting_player not in players[room]:
-        emit("feedback", {"message": "You are not in this room!"}, to=room)
+        emit("feedback", {"message": "You are not in this room!"}, to=player_sid)
         return
 
     if guess == current_word[room]:
@@ -195,18 +196,18 @@ def check_answer(data):
         else:
             scores[room][submitting_player] += 1
 
-        # Emit the updated scores
+        # Emit the updated scores to all players
         emit("update_scores", {"scores": scores[room]}, to=room)
 
         # Notify the player that the guess was correct
-        emit("feedback", {"message": f"Correct! {submitting_player} earns points."}, to=room)
+        emit("feedback", {"message": f"Correct! {submitting_player} earns points."}, to=player_sid)
 
-        # Generate a new word and emit it to the room
+        # Generate a new word and emit it only to the submitting player
         current_word[room] = random.choice(WORDS)
         scrambled_word[room] = scramble_word(current_word[room])
-        emit("new_word", {"word": scrambled_word[room]}, to=room)
+        emit("new_word", {"word": scrambled_word[room]}, to=player_sid)
     else:
-        emit("feedback", {"message": "Wrong! Try again."}, to=room)
+        emit("feedback", {"message": "Wrong! Try again."}, to=player_sid)
 
 @socketio.on("skip_word")
 def skip_word():
