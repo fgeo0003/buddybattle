@@ -8,6 +8,12 @@ app.config["SECRET_KEY"] = "hjhjsdahhds"
 socketio = SocketIO(app)
 
 rooms = {}
+WORDS = ["python", "programming", "developer", "computer", "science", "algorithm"]
+players = {}
+scores = {}
+current_word = {}
+scrambled_word = {}
+current_player_idx = {}
 
 def generate_unique_code(length):
     while True:
@@ -75,6 +81,9 @@ def game():
     room = session.get("room")
     if not room or room not in rooms:
         return redirect(url_for("home"))
+    
+    # Get the list of player names in the room
+    players_in_room = rooms[room].get("players", [])
 
     return render_template("game.html")
 
@@ -85,9 +94,6 @@ def handle_time_up():
         # Notify the client-side to redirect to the /game page
         emit("redirect_to_vote", {}, room=room)
         session.pop("room", None)
-
-
-
 
 
 @socketio.on("connect")
@@ -102,6 +108,11 @@ def connect(auth):
     
     join_room(room)
     send({"name": name, "message": "has entered the room"}, to=room)
+    
+    # Add the player name to the list of players in the room
+    if "players" not in rooms[room]:
+        rooms[room]["players"] = []  # Initialize the players list if not already present
+    rooms[room]["players"].append(name)
     rooms[room]["members"] += 1
     print(f"{name} joined room {room}")
 
@@ -118,6 +129,62 @@ def disconnect():
     
     send({"name": name, "message": "has left the room"}, to=room)
     print(f"{name} has left the room {room}")
+
+# ======= WORD SCRAMBLE GAME LOGIC ======= #
+
+def scramble_word(word):
+    scrambled = list(word)
+    random.shuffle(scrambled)
+    return "".join(scrambled)
+
+@socketio.on("start_game")
+def start_game():
+    room = session.get("room")
+    if room not in rooms:
+        return
+
+    # Ensure players and scores exist for the room
+    if room not in players:
+        players[room] = rooms[room].get("players", [])  # Get players from room
+    if room not in scores:
+        scores[room] = {player: 0 for player in players[room]}
+
+    current_player_idx[room] = 0
+    next_turn(room)
+    current_player_idx[room] = 0
+    next_turn(room)
+
+def next_turn(room):
+    if room not in players or not players[room]:  
+        return  
+
+    if current_player_idx[room] >= len(players[room]):  
+        current_player_idx[room] = 0  # Reset to the first player
+        emit("update_scores", {"scores": scores[room]}, to=room)
+
+    current_word[room] = random.choice(WORDS)
+    scrambled_word[room] = scramble_word(current_word[room])
+
+    emit("new_word", {
+        "player": players[room][current_player_idx[room]],
+        "word": scrambled_word[room]
+    }, to=room)
+
+@socketio.on("submit_guess")
+def check_answer(data):
+    room = session.get("room")
+    if room not in rooms:
+        return
+    guess = data["guess"].strip()
+    current_player = players[room][current_player_idx[room]]
+
+    if guess == current_word[room]:
+        scores[room][current_player] += 5
+        emit("feedback", {"message": "Correct! Moving to next turn."}, to=room)
+        current_player_idx[room] += 1
+        next_turn(room)
+    else:
+        emit("feedback", {"message": "Wrong! Try again."}, to=room)
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)

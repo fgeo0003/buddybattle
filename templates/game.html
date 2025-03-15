@@ -13,13 +13,58 @@
     </svg>
   </div>
 
-  <h2>Time to Play!</h2>
-  <p>You will have to battle it out.</p>
+  <h2>Word Scramble Game</h2>
 
-  <div class="activities-list" id="activities-list"></div>
+  <div id="word-container">
+    <h3 id="player-turn"></h3>
+    <h3>Unscramble this word:</h3>
+    <p id="scrambled-word"></p> <!--this should display one the randonly chosen scarmbled words taken from app.py-->
+  </div>
+
+  <input type="text" id="guess" placeholder="Enter your guess" />
+  <button id="submit-guess">Submit</button>
+
+  <p id="feedback"></p>
+
+  <h3>Scores</h3>
+  <ul id="scoreboard"></ul>
 </div>
 
+<script type="text/javascript">
+  var socketio = io();
 
+  // Display the scrambled word
+  socketio.on("new_word", (data) => {
+    console.log("New word received:", data.word); 
+    document.getElementById("scrambled-word").innerText = data.word;
+    document.getElementById("player-turn").innerText = `${data.player}'s Turn`;
+    document.getElementById("guess").value = "";
+    document.getElementById("feedback").innerText = "";
+});
+
+  // Show feedback after submitting a guess
+  socketio.on("feedback", (data) => {
+    document.getElementById("feedback").innerText = data.message;
+  });
+
+  // Update scoreboard
+  socketio.on("update_scores", (data) => {
+    const scoreboard = document.getElementById("scoreboard");
+    scoreboard.innerHTML = "";
+    for (const [player, score] of Object.entries(data.scores)) {
+      const listItem = document.createElement("li");
+      listItem.innerText = `${player}: ${score} points`;
+      scoreboard.appendChild(listItem);
+    }
+  });
+
+  document.getElementById("submit-guess").addEventListener("click", () => {
+    const guess = document.getElementById("guess").value;
+    socketio.emit("submit_guess", { guess: guess });
+  });
+
+  socketio.emit("start_game"); // Request game start when page loads
+</script>
 
 
 <!-- Import External Timer Script -->

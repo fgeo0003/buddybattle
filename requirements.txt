@@ -1,5 +1,6 @@
 # RUN THE FOLLOWING IN TERMINAL
 # python -m venv venv
+# Set-ExecutionPolicy Unrestricted -Scope Process (if it errors run in powershell) 
 # venv\Scripts\activate
 # pip install -r requirements.txt
 
