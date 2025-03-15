@@ -31,48 +31,70 @@ html, body {
   padding: 0;
 }
 
-/* Light brown box with 70% translucency */
-.brown-box {
-  background-color: rgba(245, 242, 237, 0.87); /* white with 87% opacity */
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
+/* Menu container styling */
+.menu-container {
+  position: relative;
   text-align: center;
-  width: 400px; /* Adjust width as needed */
-  margin: auto; /* Center horizontally */
+  width: 100%;
+  max-width: 600px; /* Adjust as needed */
+  margin: 0 auto; /* Center the container */
+}
+
+/* Menu map image styling */
+.menu-map {
+  width: 100%; /* Make the image responsive */
+  height: auto; /* Maintain aspect ratio */
+  border-radius: 15px; /* Optional: Add rounded corners */
+}
+
+/* Menu content styling */
+.menu-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Center the content */
+  width: 70%; /* Decrease width of the menu content */
 }
 
 /* Heading styling */
 .heading {
-  font-family: 'Comic Sans MS', cursive, sans-serif; /* Bubble letters font */
-  font-size: 2.5rem; /* Larger font size */
-  color: #333; /* Dark grey text */
+  font-family: 'Pirata One', cursive; /* Use Pirata One or another decorative font */
+  font-size: 3rem; /* Larger font size */
+  color: #8B4513; /* Brown color for a rustic look */
   margin-bottom: 20px;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3); /* Add a subtle shadow */
+  text-align: center; /* Ensure the heading is centered */
 }
 
 /* Name section styling */
 .name-section {
-  margin-bottom: 20px;
+  margin-bottom: 15px; /* Reduce gap between name section and bottom section */
+  display: flex;
+  align-items: center; /* Align label and input vertically */
+  gap: 10px; /* Space between label and input */
 }
 
 .name-section label {
   font-size: 1.2rem;
   color: #333;
+  white-space: nowrap; /* Prevent the label from wrapping */
 }
 
 .name-section input {
-  width: 100%;
-  padding: 10px;
-  margin-top: 5px;
+  width: 70%; /* Make the name input narrower */
+  padding: 8px; /* Smaller padding */
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: 1rem;
+  flex: 1; /* Take up remaining space */
 }
 
 /* Form sections (left and right) */
 .form-sections {
   display: flex;
-  gap: 20px; /* Space between left and right sections */
+  gap: 10px; /* Reduce space between left and right sections */
+  justify-content: center; /* Center the form sections */
 }
 
 .left-section,
@@ -80,13 +102,13 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 10px; /* Space between input and button */
-  width: 100%; /* Equal width for both sections */
+  width: 35%; /* Decrease width by 30% (from 45% to 35%) */
 }
 
 .left-section input,
 .right-section input {
-  width: 100%;
-  padding: 10px;
+  width: 90%; /* Make inputs take up full width of their container */
+  padding: 8px; /* Smaller padding */
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: 1rem;
@@ -95,18 +117,18 @@ html, body {
 .left-section button,
 .right-section button {
   width: 100%;
-  padding: 10px;
+  padding: 8px; /* Smaller padding */
   border: none;
   border-radius: 5px;
-  background-color: #007bff; /* Blue button */
+  background-color: #4CAF50; /* Green button */
   color: white;
-  font-size: 1rem;
+  font-size: 0.9rem; /* Slightly smaller font size */
   cursor: pointer;
 }
 
 .left-section button:hover,
 .right-section button:hover {
-  background-color: #0056b3; /* Darker blue on hover */
+  background-color: #45a049; /* Darker green on hover */
 }
 
 /* Error message styling */
@@ -116,6 +138,7 @@ html, body {
   margin-top: 10px;
   list-style: none;
   padding: 0;
+  text-align: center; /* Center error messages */
 }
 
 
