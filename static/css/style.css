@@ -416,3 +416,20 @@ h2 {
 }
 
 
+/* game_hangman */
+
+.game-box-hm {
+  border-color: black;
+  border-width: 2px;
+  border-style: solid;
+  border-radius: 10px; 
+  background-color: rgba(245, 242, 237, 0.87);
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  width: 80vw;
+  align-items: stretch;
+  padding: 20px;
+}
+
+
