@@ -13,7 +13,6 @@ players = {}
 scores = {}
 current_word = {}
 scrambled_word = {}
-current_player_idx = {}
 
 def generate_unique_code(length):
     while True:
@@ -100,10 +99,29 @@ def connect(auth):
         return
     
     join_room(room)
+    
+    # Initialize players dictionary for the room if it doesn't exist
+    if room not in players:
+        players[room] = []
+    
+    # Add the player to the room if they're not already in the list
+    if name not in players[room]:
+        players[room].append(name)
+    
+    # Update room members count
     rooms[room]["members"] += 1
+    
+    # Send a message to the room that a new player has joined
     send({"name": name, "message": "has entered the room"}, to=room)
-    emit("player_count_update", {"current_players": rooms[room]["members"], "max_players": rooms[room]["max_players"]}, to=room)
+    
+    # Emit player count update to the room
+    emit("player_count_update", {
+        "current_players": rooms[room]["members"],
+        "max_players": rooms[room]["max_players"]
+    }, to=room)
+    
     print(f"{name} joined room {room}")
+    print(f"Players in room {room}: {players[room]}")  # Debugging: Print players in the room
 
 @socketio.on("disconnect")
 def disconnect():
@@ -134,57 +152,60 @@ def start_game():
         return
 
     # Ensure players and scores exist for the room
-    if room not in players:
-        players[room] = rooms[room].get("players", [])  # Get players from room
+    if room not in players or not players[room]:
+        return
+
     if room not in scores:
         scores[room] = {player: 0 for player in players[room]}
     if room not in skip_counts:
         skip_counts[room] = {player: 0 for player in players[room]}
+    
+    # Generate the first word and emit it to the room
+    current_word[room] = random.choice(WORDS)
+    scrambled_word[room] = scramble_word(current_word[room])
+    emit("new_word", {"word": scrambled_word[room]}, to=room)
 
-    current_player_idx[room] = 0
-    next_turn(room)
 
 def scramble_word(word):
     scrambled = list(word)
     random.shuffle(scrambled)
     return "".join(scrambled)
 
-def next_turn(room):
-    if room not in players or not players[room]:  
-        return  
-
-    if current_player_idx[room] >= len(players[room]):  
-        current_player_idx[room] = 0  # Reset to the first player
-        emit("update_scores", {"scores": scores[room]}, to=room)
-
-    current_word[room] = random.choice(WORDS)
-    scrambled_word[room] = scramble_word(current_word[room])
-
-    emit("new_word", {
-        "player": players[room][current_player_idx[room]],
-        "word": scrambled_word[room]
-    }, to=room)
 
 @socketio.on("submit_guess")
 def check_answer(data):
     room = session.get("room")
     if room not in rooms:
         return
+
     guess = data["guess"].strip()
-    current_player = players[room][current_player_idx[room]]
+    submitting_player = session.get("name")  # Get the name of the player submitting the guess
+
+    # Ensure the submitting player is in the room
+    if submitting_player not in players[room]:
+        emit("feedback", {"message": "You are not in this room!"}, to=room)
+        return
 
     if guess == current_word[room]:
         # Determine points based on the number of attempts
         attempts = data.get("attempts", 1)
         if attempts == 1:
-            scores[room][current_player] += 5
+            scores[room][submitting_player] += 5  # Update the submitting player's score
         elif attempts == 2:
-            scores[room][current_player] += 3
+            scores[room][submitting_player] += 3
         else:
-            scores[room][current_player] += 1
-        emit("feedback", {"message": "Correct! Moving to next turn."}, to=room)
-        current_player_idx[room] += 1
-        next_turn(room)
+            scores[room][submitting_player] += 1
+
+        # Emit the updated scores
+        emit("update_scores", {"scores": scores[room]}, to=room)
+
+        # Notify the player that the guess was correct
+        emit("feedback", {"message": f"Correct! {submitting_player} earns points."}, to=room)
+
+        # Generate a new word and emit it to the room
+        current_word[room] = random.choice(WORDS)
+        scrambled_word[room] = scramble_word(current_word[room])
+        emit("new_word", {"word": scrambled_word[room]}, to=room)
     else:
         emit("feedback", {"message": "Wrong! Try again."}, to=room)
 
@@ -193,15 +214,30 @@ def skip_word():
     room = session.get("room")
     if room not in rooms:
         return
-    current_player = players[room][current_player_idx[room]]
 
-    if skip_counts[room][current_player] < 2:
-        skip_counts[room][current_player] += 1
-        emit("feedback", {"message": "Word skipped. Moving to next turn."}, to=room)
-        current_player_idx[room] += 1
-        next_turn(room)
+    submitting_player = session.get("name")  # Get the name of the player submitting the skip request
+    player_sid = request.sid  # Get the session ID of the player
+
+    # Ensure the submitting player is in the room
+    if submitting_player not in players[room]:
+        emit("feedback", {"message": "You are not in this room!"}, to=player_sid)
+        return
+
+    # Initialize skip_counts for the room if it doesn't exist
+    if room not in skip_counts:
+        skip_counts[room] = {player: 0 for player in players[room]}
+
+    # Check if the player has used fewer than 2 skips
+    if skip_counts[room][submitting_player] < 2:
+        skip_counts[room][submitting_player] += 1  # Increment the player's skip count
+        emit("feedback", {"message": f"Word skipped. You have {2 - skip_counts[room][submitting_player]} skips left."}, to=player_sid)
+
+        # Generate a new word and emit it only to the player who skipped
+        current_word[room] = random.choice(WORDS)
+        scrambled_word[room] = scramble_word(current_word[room])
+        emit("new_word", {"word": scrambled_word[room]}, to=player_sid)
     else:
-        emit("feedback", {"message": "You have used all your skips."}, to=room)
+        emit("feedback", {"message": "You have used all your skips."}, to=player_sid)
 
 
 ### FIONA - CHAT ROOM ###
@@ -244,7 +280,6 @@ def handle_start_battle():
     print(f"Redirecting to: {game_url}")  # Debugging: Print the URL
     emit("redirect_to_game", {"url": game_url}, to=room)
     session.pop("room", None)
-
 
 
 if __name__ == "__main__":

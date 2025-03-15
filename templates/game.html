@@ -1,4 +1,5 @@
-{% extends 'base.html' %} {% block content %}
+{% extends 'base.html' %} 
+{% block content %}
 <div class="game-box-ws">
   <!-- Timer Display -->
   <div class="timer-container">
@@ -12,22 +13,24 @@
     </svg>
   </div>
 
-  <h2>Word Scramble Game</h2>
+  <h2>Word Mix</h2>
 
   <div id="word-container">
-    <h3 id="player-turn"></h3>
     <h3>Unscramble this word:</h3>
     <p id="scrambled-word"></p> 
   </div>
 
   <input type="text" id="guess" placeholder="Enter your guess" />
-  <button id="submit-guess">Submit</button>
-  <button id="skip-word">Skip</button> <!-- Add Skip Button -->
+  <button id="submit_guess">Submit</button>
+  <button id="skip_word">Skip</button> 
 
   <p id="feedback"></p>
 
-  <h3>Scores</h3>
-  <ul id="scoreboard"></ul>
+  <!-- Leaderboard Section -->
+  <div id="leaderboard">
+    <h3>Leaderboard</h3>
+    <ul id="scoreboard"></ul>
+  </div>
 </div>
 
 <script type="text/javascript">
@@ -36,12 +39,11 @@
 
   // Display the scrambled word
   socketio.on("new_word", (data) => {
-    console.log("New word received:", data.word); 
-    document.getElementById("scrambled-word").innerText = data.word;
-    document.getElementById("player-turn").innerText = `${data.player}'s Turn`;
-    document.getElementById("guess").value = "";
-    document.getElementById("feedback").innerText = "";
-    attempts = 1; // Reset attempts for the new word
+    console.log("New word received:", data.word);  // Debugging
+    document.getElementById("scrambled-word").innerText = data.word;  // Update the scrambled word display
+    document.getElementById("guess").value = "";  // Clear the input field
+    document.getElementById("feedback").innerText = "";  // Clear feedback
+    attempts = 1;  // Reset attempts for the new word
   });
 
   // Show feedback after submitting a guess
@@ -60,13 +62,13 @@
     }
   });
 
-  document.getElementById("submit-guess").addEventListener("click", () => {
+  document.getElementById("submit_guess").addEventListener("click", () => {
     const guess = document.getElementById("guess").value;
     socketio.emit("submit_guess", { guess: guess, attempts: attempts });
     attempts += 1; // Increment attempts
   });
 
-  document.getElementById("skip-word").addEventListener("click", () => {
+  document.getElementById("skip_word").addEventListener("click", () => {
     socketio.emit("skip_word");
   });
 
