@@ -1,77 +1,147 @@
-{% extends 'base.html' %}
-{% block content %}
-<div class="activity-board">
-  <!-- Timer Display -->
-  <div class="timer-container">
-    <svg class="countdown-svg" width="80" height="80" viewBox="0 0 100 100">
-      <circle class="countdown-circle-bg" cx="50" cy="50" r="45"></circle>
-      <circle class="countdown-circle" cx="50" cy="50" r="45"></circle>
-      <text id="timer-text" x="50" y="55" text-anchor="middle" font-size="20px" fill="#fff"
-        transform="rotate(90, 50, 50)">
-        60
-      </text>
-    </svg>
+{% extends 'base.html' %} {% block content %}
+<div class="message-box">
+  <h2>Chat Room: {{code}}</h2>
+  <h3 id="status-message">Waiting for all players to join... ({{current_players}}/{{max_players}})</h3>
+  <div class="messages" id="messages"></div>
+  <div class="responses" id="responses" style="display: none;">
+    <!-- Submissions will be displayed here as text bubbles -->
   </div>
-  
-
-  <h2>Enter an activity you would like to have at your next hangout</h2>
-  <div class="responses" id="responses">
-    {% for msg in messages %}
-    <div class="response-bubble">
-      <strong>{{ msg.name }}:</strong> {{ msg.message }}
-    </div>
-    {% endfor %}
+  <div id="start-battle-container" style="display: none; text-align: center; margin-top: 20px;">
+    <button id="start-battle-btn" class="start-battle-btn">Start Battle</button>
   </div>
-  <div class="inputs">
+  <div class="inputs" id="inputs" style="display: none;">
     <input
       type="text"
-      placeholder="Enter your option..."
-      name="activity"
-      id="activity"
+      rows="3"
+      placeholder="Message"
+      name="message"
+      id="message"
     />
-    <button type="button" name="send" id="send-btn" onClick="sendMessage()">Submit</button>
+    <button type="button" name="send" id="send-btn" onClick="sendMessage()">
+      Send
+    </button>
   </div>
 </div>
-
 <script type="text/javascript">
   var socketio = io();
 
-  const responses = document.getElementById("responses");
+  const messages = document.getElementById("messages");
+  const inputsDiv = document.getElementById("inputs");
+  const statusMessage = document.getElementById("status-message");
+  const responsesDiv = document.getElementById("responses");
+  const startBattleContainer = document.getElementById("start-battle-container");
+  const startBattleBtn = document.getElementById("start-battle-btn");
 
-  const createResponse = (name, msg) => {
+  const createMessage = (name, msg) => {
     const content = `
-    <div class="response-bubble">
-        <strong>${name}:</strong> ${msg}
+    <div class="text">
+        <span>
+            <strong>${name}</strong>: ${msg}
+        </span>
+        <span class="muted">
+            ${new Date().toLocaleString()}
+        </span>
     </div>
     `;
-    responses.innerHTML += content;
-    // Ensure the response bubbles are always in view
-    responses.scrollTop = responses.scrollHeight;
+    messages.innerHTML += content;
   };
 
-  socketio.on("response", (data) => {
-    createResponse(data.name, data.message);
+  // Listen for new messages
+  socketio.on("message", (data) => {
+    createMessage(data.name, data.message);
   });
 
+  // Listen for player count updates
+  socketio.on("player_count_update", (data) => {
+    const { current_players, max_players } = data;
+    statusMessage.textContent = `Waiting for all players to join... (${current_players}/${max_players})`;
+
+    // If all players have joined, show the input field and update the status message
+    if (current_players >= max_players) {
+      statusMessage.textContent = "Ahoy there!";
+      inputsDiv.style.display = "block";
+
+      // Add a green bold message to the chat area
+      const welcomeMessage = `
+        <div class="text" style="color: green; font-weight: bold; text-align: center;">
+          Submit your suggestions 😊
+        </div>
+      `;
+      messages.innerHTML += welcomeMessage;
+    }
+  });
+
+  // Function to create a response bubble
+  const createResponseBubble = (name, msg) => {
+    const bubble = `
+    <div class="response-bubble">
+        ${msg} <!-- Removed the name -->
+    </div>
+    `;
+    responsesDiv.innerHTML += bubble;
+  };
+
+
+// Add heading when all submissions are received
+socketio.on("all_submissions_received", (data) => {
+  // Hide the input field
+  inputsDiv.style.display = "none";
+
+  // Show the responses section
+  responsesDiv.style.display = "block";
+
+  // Clear the responses section
+  responsesDiv.innerHTML = "";
+
+  // Add the image
+  responsesDiv.insertAdjacentHTML("beforeend", `
+    <img src="/static/piratefight.png" alt="Pirate Fight" class="small-centered-image">
+  `);
+
+  // Add "Options" heading
+  responsesDiv.insertAdjacentHTML("beforeend", `
+    <h3 class="options-heading">Options</h3>
+  `);
+
+  // Display all submissions as text bubbles
+  data.submissions.forEach(submission => {
+    createResponseBubble(submission.name, submission.message);
+  });
+
+  // Show the "Start Battle" button
+  startBattleContainer.style.display = "block";
+});
+
+
+  // Listen for redirect to game.html
+  socketio.on("redirect_to_game", (data) => {
+      console.log("Received redirect event:", data);  // Debugging: Log the event
+      window.location.href = data.url;
+  });
+
+  // Handle "Start Battle" button click
+  startBattleBtn.addEventListener("click", () => {
+      console.log("Start Battle button clicked");  // Debugging: Log button click
+      socketio.emit("start_battle");
+  });
+
+  // Send message function
   const sendMessage = () => {
-    const activity = document.getElementById("activity");
-    if (activity.value == "") return;
-    socketio.emit("response", { data: activity.value });
-    createResponse("You", activity.value); // Display the current user's input immediately
-    activity.value = "";
+    const message = document.getElementById("message");
+    const sendBtn = document.getElementById("send-btn");
+    if (message.value == "") return;
+
+    // Emit the message to the server
+    socketio.emit("message", { data: message.value });
+
+    // Clear the input and disable it
+    message.value = "";
+    message.disabled = true;
+    sendBtn.disabled = true;
   };
 </script>
-
-<!-- Import External Timer Script -->
-<script src="{{ url_for('static', filename='js/timer.js') }}"></script>
+{% for msg in messages %}
 <script type="text/javascript">
-    var socketio = io();
-
-    // Listen for the redirect event from the server
-    socketio.on("redirect_to_vote", function () {
-        console.log("Redirecting to /game");  // Debugging log
-        window.location.href = "/game";  // Redirect to the game page
-    });
+  createMessage("{{msg.name}}", "{{msg.message}}");
 </script>
-
-{% endblock %}
+{% endfor %} {% endblock %}

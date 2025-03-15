@@ -34,7 +34,6 @@ def home():
         code = request.form.get("code")
         join = request.form.get("join", False)
         create = request.form.get("create", False)
-        max_players = request.form.get("max_players", type=int)
 
         if not name:
             return render_template("home.html", error="Please enter a name.", code=code, name=name)
@@ -44,16 +43,8 @@ def home():
         
         room = code
         if create != False:
-            if not max_players or max_players < 2:
-                return render_template("home.html", error="Please enter a valid number of players (2-10).", code=code, name=name)
             room = generate_unique_code(4)
-            rooms[room] = {
-                "members": 0,
-                "messages": [],
-                "max_players": max_players,
-                "users_who_submitted": [],
-                "submission_count": 0,  # Track number of submissions
-            }
+            rooms[room] = {"members": 0, "messages": []}
         elif code not in rooms:
             return render_template("home.html", error="Room does not exist.", code=code, name=name)
         
@@ -69,16 +60,32 @@ def room():
     if room is None or session.get("name") is None or room not in rooms:
         return redirect(url_for("home"))
 
-    return render_template("room.html", code=room, messages=rooms[room]["messages"], max_players=rooms[room]["max_players"], current_players=rooms[room]["members"])
+    return render_template("room.html", code=room, messages=rooms[room]["messages"])
+
+@socketio.on("response")
+def response(data):
+    room = session.get("room")
+    if room not in rooms:
+        return 
+    
+    content = {
+        "name": session.get("name"),
+        "message": data["data"]
+    }
+    send(content, to=room)
+    rooms[room]["messages"].append(content)
+    print(f"{session.get('name')} suggested: {data['data']}")
 
 @app.route("/game")
 def game():
     room = session.get("room")
-    if room is None or session.get("name") is None or room not in rooms:
+    if not room or room not in rooms:
         return redirect(url_for("home"))
+    
+    # Get the list of player names in the room
+    players_in_room = rooms[room].get("players", [])
 
-    return render_template("game.html", messages=rooms[room]["messages"])
-
+    return render_template("game.html")
 
 @socketio.on("time_up")
 def handle_time_up():
@@ -100,9 +107,13 @@ def connect(auth):
         return
     
     join_room(room)
-    rooms[room]["members"] += 1
     send({"name": name, "message": "has entered the room"}, to=room)
-    emit("player_count_update", {"current_players": rooms[room]["members"], "max_players": rooms[room]["max_players"]}, to=room)
+    
+    # Add the player name to the list of players in the room
+    if "players" not in rooms[room]:
+        rooms[room]["players"] = []  # Initialize the players list if not already present
+    rooms[room]["players"].append(name)
+    rooms[room]["members"] += 1
     print(f"{name} joined room {room}")
 
 @socketio.on("disconnect")
@@ -115,13 +126,9 @@ def disconnect():
         rooms[room]["members"] -= 1
         if rooms[room]["members"] <= 0:
             del rooms[room]
-        else:
-            emit("player_count_update", {"current_players": rooms[room]["members"], "max_players": rooms[room]["max_players"]}, to=room)
     
     send({"name": name, "message": "has left the room"}, to=room)
     print(f"{name} has left the room {room}")
-
-
 
 # ======= WORD MIX GAME LOGIC ======= #
 # Add a dictionary to track the number of skips used by each player
@@ -203,51 +210,9 @@ def skip_word():
     else:
         emit("feedback", {"message": "You have used all your skips."}, to=room)
 
-
-### FIONA - CHAT ROOM ###
-
-@socketio.on("message")
-def handle_message(data):
-    room = session.get("room")
-    name = session.get("name")
-    if room not in rooms:
-        return 
-    
-    # Check if the user has already submitted a message
-    if name in rooms[room]["users_who_submitted"]:
-        return  # User has already submitted
-
-    # Store the message
-    content = {
-        "name": name,
-        "message": data["data"]
-    }
-    rooms[room]["messages"].append(content)
-    rooms[room]["users_who_submitted"].append(name)
-    rooms[room]["submission_count"] += 1
-
-    # Broadcast the message to the room
-    send(content, to=room)
-
-    # Check if all users have submitted
-    if rooms[room]["submission_count"] >= rooms[room]["max_players"]:
-        # Emit an event to display all submissions
-        emit("all_submissions_received", {"submissions": rooms[room]["messages"]}, to=room)
-
-@socketio.on("start_battle")
-def handle_start_battle():
-    room = session.get("room")
-    if room not in rooms:
-        return
-
-    game_url = url_for("game")
-    print(f"Redirecting to: {game_url}")  # Debugging: Print the URL
-    emit("redirect_to_game", {"url": game_url}, to=room)
-    session.pop("room", None)
-
-
-
 if __name__ == "__main__":
     socketio.run(app, debug=True)
 
-
+# code to add: 
+# at the end, display the words they skipped
+# once the timer runs out, clear the page and display a leaderboard with the player name and their score next to it 

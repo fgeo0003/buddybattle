@@ -1,9 +1,10 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<div class="brown-box">
+  <h1 class="heading">Buddy Battle</h1>
   <form method="post" class="buttons">
-    <h3>Enter The Chat Room</h3>
-    <div>
+    <div class="name-section">
       <label>Name:</label>
       <input
         type="text"
@@ -12,15 +13,21 @@
         value="{{name}}"
       />
     </div>
-    <div class="join">
-      <input type="text" placeholder="Room Code" name="code" value="{{code}}" />
-      <button type="submit" name="join">Join a Room</button>
+    <div class="form-sections">
+      <div class="left-section">
+        <input type="text" placeholder="Room Code" name="code" value="{{code}}" />
+        <button type="submit" name="join">Join a Room</button>
+      </div>
+      <div class="right-section">
+        <input type="number" placeholder="Max Players" name="max_players" min="2" max="10" />
+        <button type="submit" name="create" class="create-btn">Create a Room</button>
+      </div>
     </div>
-    <button type="submit" name="create" class="create-btn">Create a Room</button>
     {% if error %}
-      <ul>
+      <ul class="error-message">
         <li>{{error}}</li>
       </ul>
     {% endif %}
   </form>
+</div>
 {% endblock %}

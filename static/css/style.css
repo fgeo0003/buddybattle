@@ -1,3 +1,5 @@
+/* HOME PAGE */
+
 .content {
   display: flex;
   align-items: center;
@@ -22,36 +24,171 @@
   width: 100%;
 }
 
+/* Ensure the html and body take up the full height of the viewport */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Light brown box with 70% translucency */
+.brown-box {
+  background-color: rgba(245, 242, 237, 0.87); /* white with 87% opacity */
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  width: 400px; /* Adjust width as needed */
+  margin: auto; /* Center horizontally */
+}
+
+/* Heading styling */
+.heading {
+  font-family: 'Comic Sans MS', cursive, sans-serif; /* Bubble letters font */
+  font-size: 2.5rem; /* Larger font size */
+  color: #333; /* Dark grey text */
+  margin-bottom: 20px;
+}
+
+/* Name section styling */
+.name-section {
+  margin-bottom: 20px;
+}
+
+.name-section label {
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.name-section input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+/* Form sections (left and right) */
+.form-sections {
+  display: flex;
+  gap: 20px; /* Space between left and right sections */
+}
+
+.left-section,
+.right-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px; /* Space between input and button */
+  width: 100%; /* Equal width for both sections */
+}
+
+.left-section input,
+.right-section input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.left-section button,
+.right-section button {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #007bff; /* Blue button */
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.left-section button:hover,
+.right-section button:hover {
+  background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Error message styling */
+.error-message {
+  color: red;
+  font-size: 0.9rem;
+  margin-top: 10px;
+  list-style: none;
+  padding: 0;
+}
+
+
+body {
+  background-image: url('/static/background.jpg'); /* This points to the static folder */
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+
+
+
 .message-box {
   border-color: black;
   border-width: 2px;
   border-style: solid;
-  border-radius: 10px;
-  background-color: whitesmoke;
+  border-radius: 10px; 
+  background-color: rgba(245, 242, 237, 0.87);
   height: 80vh;
   display: flex;
   flex-direction: column;
   width: 80vw;
   align-items: stretch;
+  padding: 20px;
 }
 
 .messages {
   overflow-y: scroll;
   flex: 1;
   width: 100%;
+  padding: 0 10px; /* Adds padding on the left and right */
 }
 
 .inputs {
   padding: 10px;
   display: flex;
+  gap: 10px;
+  width: 100%;
 }
 
 h2 {
   text-align: center;
 }
 
+/* Inputs container styling */
+.inputs {
+  padding: 10px;
+  display: flex;
+  gap: 10px; /* Space between input and button */
+  width: 100%; /* Ensure the container spans the full width */
+}
+
+/* Message input field styling */
 #message {
-  flex: 1;
+  width: 80%; /* Take up 80% of the container width */
+  padding: 10px;
+  font-size: 16px;
+  box-sizing: border-box; /* Include padding in the width calculation */
+}
+
+/* Send button styling */
+#send-btn {
+  padding: 10px;
+  background-color: #4CAF50; /* Green color */
+  color: white;
+  border: none;
+  cursor: pointer;
+  white-space: nowrap; /* Prevent text from wrapping */
+  flex-shrink: 0; /* Prevent the button from shrinking */
 }
 
 .text {
@@ -63,66 +200,71 @@ h2 {
   padding-right: 10px;
 }
 
-.muted {
-  font-size: 10px;
-  color: darkgray;
-}
 
-body {
-  background-image: url('/static/background.jpg'); /* This points to the static folder */
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  background-size: cover;
-  height: 100vh; /* Ensure the body takes the full height of the viewport */
-  margin: 0;
-}
-
-.activity-board {
-  padding: 20px;
+.response-bubble {
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  background-color: #f0f0f0;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  margin: 5px; /* Adds spacing between bubbles */
+  display: inline-block; /* Allows bubbles to sit next to each other */
+  max-width: 45%; /* Limits bubble width to prevent overflow */
+  text-align: center; /* Centers text inside bubbles */
 }
 
 .responses {
-  margin-bottom: 20px;
-  max-height: 400px;
-  overflow-y: auto;
+  text-align: center; /* Centers bubbles within the responses container */
+  margin-top: 20px; /* Adds spacing above the bubbles */
 }
 
-.response-bubble {
-  background-color: #f0f0f0;
-  padding: 15px;
-  margin-bottom: 10px;
-  border-radius: 15px;
-  max-width: 80%;
-  word-wrap: break-word;
-  display: inline-block;
-  margin-left: 10px;
-  margin-right: 10px;
+#start-battle-container {
+  display: none;
+  text-align: center;
+  margin-top: 30px;
+  margin-bottom: 30px;
 }
 
-.inputs {
-  display: flex;
-  gap: 10px;
-  margin-top: 20px;
-}
 
-#activity {
-  flex-grow: 1;
-  padding: 10px;
-  border-radius: 5px;
-  border: 1px solid #ccc;
-}
-
-#send-btn {
-  padding: 10px 15px;
+#start-battle-btn {
+  padding: 15px 30px;
+  font-size: 18px;
   background-color: #4CAF50;
   color: white;
   border: none;
+  border-radius: 5px;
   cursor: pointer;
+}
+
+.start-battle-btn:hover {
+  background-color: #218838; /* Darker green on hover */
 }
 
 #send-btn:hover {
   background-color: #45a049;
 }
+
+
+/* Smaller centered image styling */
+.small-centered-image {
+  width: auto; /* Let the width adjust based on height */
+  height: 120px; /* Fixed height of 60px */
+  display: block; /* Ensure the image is treated as a block element */
+  margin: 0 auto 10px; /* Center the image horizontally and add space below */
+}
+
+/* Options heading styling */
+.options-heading {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: bold; /* Make the heading bold */
+  color: #333;
+  margin-bottom: 20px;
+}
+
+
+
+
 
 .timer-container {
   position: absolute;
@@ -150,3 +292,19 @@ body {
   transition: stroke-dashoffset 0.1s linear;
 }
 
+
+
+/* game_wordscramble */
+.game-box-ws {
+  border-color: black;
+  border-width: 2px;
+  border-style: solid;
+  border-radius: 10px; 
+  background-color: rgba(245, 242, 237, 0.87);
+  height: 60vh;
+  display: flex;
+  flex-direction: column;
+  width: 80vw;
+  align-items: stretch;
+  padding: 20px;
+}
