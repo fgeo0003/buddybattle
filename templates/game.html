@@ -77,6 +77,11 @@
   });
 
   socketio.emit("start_game"); // Request game start when page loads
+
+// Handle the timer running out
+  socketio.on("redirect_to_leaderboard", (data) => {
+    window.location.href = data.url;
+  });
 </script>
 
 <!-- Import External Timer Script -->

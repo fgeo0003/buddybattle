@@ -83,9 +83,8 @@ def game():
 def handle_time_up():
     room = session.get("room")
     if room in rooms:
-        # Notify the client-side to redirect to the /game page
-        emit("redirect_to_vote", {}, room=room)
-        session.pop("room", None)
+        # Emit an event to redirect all players to the leaderboard page
+        emit("redirect_to_leaderboard", {"url": url_for("leaderboard")}, to=room)
 
 
 @socketio.on("connect")
@@ -239,6 +238,66 @@ def skip_word():
     else:
         emit("feedback", {"message": "You have used all your skips."}, to=player_sid)
 
+# Function to get the winning player
+def get_winning_player(room):
+    if room not in scores or not scores[room]:
+        return None
+    return max(scores[room], key=scores[room].get)  # Player with the highest score
+
+# Function to notify the winning player
+def notify_winning_player(room):
+    winning_player = get_winning_player(room)
+    if not winning_player:
+        return
+
+    # Send the list of ideas to the winning player
+    emit("you_are_the_winner", {
+        "message": "You are the winner! Select an idea to eliminate.",
+        "submissions": rooms[room]["messages"]
+    }, to=request.sid)
+
+@socketio.on("eliminate_idea")
+def eliminate_idea(data):
+    room = session.get("room")
+    if room not in rooms:
+        return
+
+    winning_player = get_winning_player(room)
+    submitting_player = session.get("name")
+
+    # Ensure only the winning player can eliminate an idea
+    if submitting_player != winning_player:
+        emit("feedback", {"message": "Only the winning player can eliminate an idea."}, to=request.sid)
+        return
+
+    # Get the index of the idea to eliminate
+    idea_index = data.get("idea_index")
+    if idea_index is None or not isinstance(idea_index, int) or idea_index < 0 or idea_index >= len(rooms[room]["messages"]):
+        emit("feedback", {"message": "Invalid idea selection."}, to=request.sid)
+        return
+
+    # Remove the selected idea
+    eliminated_idea = rooms[room]["messages"].pop(idea_index)
+
+    # Broadcast the eliminated idea to all players
+    emit("idea_eliminated", {
+        "winning_player": winning_player,
+        "eliminated_idea": eliminated_idea["message"]
+    }, to=room)
+
+@app.route("/leaderboard")
+def leaderboard():
+    room = session.get("room")
+    if room is None or room not in rooms:
+        return redirect(url_for("home"))
+
+    # Get the scores for the room
+    room_scores = scores.get(room, {})
+    winning_player = get_winning_player(room)
+    is_winner = session.get("name") == winning_player
+
+    return render_template("leaderboard.html", scores=room_scores, room=room, is_winner=is_winner, rooms=rooms)
+
 
 ### FIONA - CHAT ROOM ###
 
@@ -286,6 +345,6 @@ if __name__ == "__main__":
     socketio.run(app, debug=True)
 
 
-    
+
 
 
