@@ -1,0 +1,6 @@
+# STEPS TO FOLLOW 
+# run python -m venv venv
+# venv\Scripts\activate
+# pip install -r requirements.txt
+
+flask_socketio==5.5.1

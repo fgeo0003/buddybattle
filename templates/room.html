@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="activity-board">
+  <!-- Timer Display -->
+  <div id="timer" class="timer">Time Left: 60s</div>
+
+  <h2>Enter an activity you would like to have at your next hangout</h2>
+  <div class="responses" id="responses">
+    {% for msg in messages %}
+    <div class="response-bubble">
+      <strong>{{ msg.name }}:</strong> {{ msg.message }}
+    </div>
+    {% endfor %}
+  </div>
+  <div class="inputs">
+    <input
+      type="text"
+      placeholder="Enter your option..."
+      name="activity"
+      id="activity"
+    />
+    <button type="button" name="send" id="send-btn" onClick="sendMessage()">Submit</button>
+  </div>
+</div>
+
+<script type="text/javascript">
+  var socketio = io();
+
+  const responses = document.getElementById("responses");
+  let timeLeft = 60; // Timer starts at 60 seconds
+  function updateTimer() {
+    document.getElementById("timer").innerText = `Time Left: ${timeLeft}s`;
+    if (timeLeft === 0) {
+      socketio.emit("time_up");  // Notify server that time is up
+      window.location.href = "/game"; // Redirect to the game page
+    } else {
+      timeLeft--;
+      setTimeout(updateTimer, 1000); // Update every second
+    }
+  }
+
+  // Start the timer on page load
+  updateTimer();
+
+  const createResponse = (name, msg) => {
+    const content = `
+    <div class="response-bubble">
+        <strong>${name}:</strong> ${msg}
+    </div>
+    `;
+    responses.innerHTML += content;
+    // Ensure the response bubbles are always in view
+    responses.scrollTop = responses.scrollHeight;
+  };
+
+  socketio.on("response", (data) => {
+    createResponse(data.name, data.message);
+  });
+
+  const sendMessage = () => {
+    const activity = document.getElementById("activity");
+    if (activity.value == "") return;
+    socketio.emit("response", { data: activity.value });
+    createResponse("You", activity.value); // Display the current user's input immediately
+    activity.value = "";
+  };
+</script>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% extends 'base.html' %} {% block content %}
+<div class="vote-board">
+  <h2>Time to Play!</h2>
+  <p>Vote for the activity you would like to do.</p>
+
+  <div class="activities-list" id="activities-list"></div>
+</div>
+
+<script type="text/javascript">
+  var socketio = io();
+
+  // Function to display submitted activities
+  socketio.on("load_activities", (data) => {
+    const activityList = document.getElementById("activities-list");
+    activityList.innerHTML = ""; // Clear old list
+
+    data.activities.forEach((activity) => {
+      const activityItem = document.createElement("div");
+      activityItem.classList.add("activity-item");
+      activityItem.innerText = activity;
+      activityList.appendChild(activityItem);
+    });
+  });
+
+  // Request activity list from the server
+  socketio.emit("request_activities");
+</script>
+{% endblock %}
