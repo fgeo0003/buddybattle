@@ -1,10 +1,12 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="leaderboard-container">
-    <h2>Leaderboard</h2>
-    <ul>
-        {% for player, score in scores.items() %}
-        <li>{{ player }}: {{ score }} points</li>
+    <h2 class="heading">Leaderboard</h2>
+    <ul class="leaderboard-list">
+        {% for player, score in scores.items() | sort(attribute='1', reverse=True) %}
+        <li class="{% if loop.first %}top-player{% endif %}">
+            <strong>{{ player }}</strong>: {{ score }} coins
+        </li>
         {% endfor %}
     </ul>
 
@@ -17,11 +19,13 @@
 
     {% if is_winner %}
     <div class="eliminate-idea">
-        <h3>You are the winner! Eliminate an idea:</h3>
+        <h3 class="congratulations">Congratulations ✨</h3>
+        <h4 class="eliminate-text">Eliminate an idea:</h4>
         <ul>
             {% for message in rooms[room]["messages"] %}
             <li>
-                {{ message.message }} (submitted by {{ message.name }})
+                {{ message.message }} 
+                <!-- (submitted by {{ message.name }}) -->
                 <button onclick="eliminateIdea({{ loop.index0 }})">Eliminate</button>
             </li>
             {% endfor %}
@@ -46,4 +50,3 @@
     });
 </script>
 {% endblock %}
-

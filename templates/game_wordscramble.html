@@ -1,0 +1,93 @@
+{% extends 'base.html' %} 
+{% block content %}
+<div class="game-box-ws">
+  <!-- Timer Display -->
+  <div class="timer-container">
+    <svg class="countdown-svg" width="80" height="80" viewBox="0 0 100 100">
+      <circle class="countdown-circle-bg" cx="50" cy="50" r="45"></circle>
+      <circle class="countdown-circle" cx="50" cy="50" r="45"></circle>
+      <text id="timer-text" x="50" y="55" text-anchor="middle" font-size="20px" fill="#fff"
+        transform="rotate(90, 50, 50)">
+        60
+      </text>
+    </svg>
+  </div>
+
+  <h2 class="heading">Word Mix</h2>
+
+  <div id="word-container">
+    <h3>Unscramble this word:</h3>
+    <p id="scrambled-word"></p> 
+  </div>
+
+  <input type="text" id="guess" placeholder="Enter your guess" />
+
+  <!-- Button container for Submit and Skip -->
+  <div class="button-container">
+    <button id="submit_guess">Submit</button>
+    <button id="skip_word">Skip</button> 
+  </div>
+
+  <p id="feedback"></p>
+
+  <!-- Leaderboard Section -->
+  <div id="leaderboard">
+    <h3>Leaderboard</h3>
+    <ul id="scoreboard"></ul>
+  </div>
+</div>
+
+<script type="text/javascript">
+  var socketio = io();
+  var attempts = 1; // Track the number of attempts
+
+  // Display the scrambled word
+  socketio.on("new_word", (data) => {
+    console.log("New word received:", data.word);  // Debugging
+    document.getElementById("scrambled-word").innerText = data.word;  // Update the scrambled word display
+    document.getElementById("guess").value = "";  // Clear the input field
+    document.getElementById("feedback").innerText = "";  // Clear feedback
+    attempts = 1;  // Reset attempts for the new word
+  });
+
+  // Show feedback after submitting a guess
+  socketio.on("feedback", (data) => {
+    document.getElementById("feedback").innerText = data.message;
+  });
+
+  // Update scoreboard
+  socketio.on("update_scores", (data) => {
+    const scoreboard = document.getElementById("scoreboard");
+    scoreboard.innerHTML = "";
+    for (const [player, score] of Object.entries(data.scores)) {
+      const listItem = document.createElement("li");
+      listItem.innerText = `${player}: ${score} points`;
+      scoreboard.appendChild(listItem);
+    }
+  });
+
+  document.getElementById("submit_guess").addEventListener("click", () => {
+    const guess = document.getElementById("guess").value;
+    socketio.emit("submit_guess", { guess: guess, attempts: attempts });
+    attempts += 1; // Increment attempts
+  });
+
+  document.getElementById("skip_word").addEventListener("click", () => {
+    socketio.emit("skip_word");
+  });
+
+  socketio.emit("start_game"); // Request game start when page loads
+
+// Handle the timer running out
+  socketio.on("redirect_to_leaderboard", (data) => {
+    window.location.href = data.url;
+  });
+</script>
+
+<!-- Import External Timer Script -->
+<script src="{{ url_for('static', filename='js/timer.js') }}"></script>
+
+{% endblock %}
+
+
+

@@ -389,30 +389,76 @@ h2 {
   opacity: 0.9; /* Slightly fade on hover */
 }
 
+
+
+
 /* Leaderboard styling */
-#leaderboard {
-  margin-top: 20px;
-  padding: 10px;
-  background-color: #f4f4f4;
-  border-radius: 5px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+.leaderboard-container {
+  border-color: black;
+  border-width: 2px;
+  border-style: solid;
+  border-radius: 10px; 
+  background-color: rgba(245, 242, 237, 0.87);
+  height: 80vh;
+  display: flex;
+  flex-direction: column;
+  width: 80vw;
+  align-items: stretch;
+  padding: 20px;
 }
 
-#leaderboard h3 {
-  margin-bottom: 10px;
-  font-size: 18px;
-  color: #333;
-}
-
-#scoreboard {
-  list-style-type: none;
+.leaderboard-list {
+  list-style-type: none; /* Remove bullet points */
   padding: 0;
 }
 
-#scoreboard li {
+.leaderboard-list li {
   padding: 5px 0;
   font-size: 16px;
   color: #555;
+  text-align: center; /* Center the text */
+}
+
+.top-player {
+  background-color: yellow; /* Highlight the top player */
+  font-weight: bold; /* Optional: Make the top player's text bold */
+}
+
+.congratulations {
+  font-family: 'Comic Sans MS', cursive, sans-serif; /* Use Comic Sans */
+  font-size: 2rem; /* Larger font size */
+  color: green; /* Green text */
+  text-align: center; /* Center the text */
+  margin-bottom: 10px; /* Add some spacing */
+}
+
+.eliminate-text {
+  font-size: 1.2rem; /* Slightly larger font size */
+  font-weight: bold; /* Bold text */
+  text-align: center; /* Center the text */
+  margin-bottom: 20px; /* Add some spacing */
+}
+
+/* Elimination message styling */
+.elimination-message {
+  text-align: center; /* Center the text */
+  margin-top: 20px; /* Add some spacing */
+}
+
+/* Button styling */
+button {
+  padding: 5px 10px;
+  border: none;
+  border-radius: 5px;
+  background-color: #4CAF50; /* Green button */
+  color: white;
+  font-size: 0.9rem; /* Slightly smaller font size */
+  cursor: pointer;
+}
+
+button:hover {
+  opacity: 0.9; /* Slightly fade on hover */
 }
 
 
@@ -432,4 +478,14 @@ h2 {
   padding: 20px;
 }
 
+/* Hangman drawing styling */
+#hangman-drawing {
+  text-align: center; /* Center the drawing */
+  margin: 20px 0; /* Add some vertical spacing */
+}
+
+#hangman-image {
+  max-width: 100%; /* Ensure the image is responsive */
+  height: auto; /* Maintain aspect ratio */
+}
 

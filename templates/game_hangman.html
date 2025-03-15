@@ -1,0 +1,124 @@
+{% extends 'base.html' %} 
+{% block content %}
+<div class="game-box-hm">
+  <!-- Timer Display -->
+  <div class="timer-container">
+    <svg class="countdown-svg" width="80" height="80" viewBox="0 0 100 100">
+      <circle class="countdown-circle-bg" cx="50" cy="50" r="45"></circle>
+      <circle class="countdown-circle" cx="50" cy="50" r="45"></circle>
+      <text id="timer-text" x="50" y="55" text-anchor="middle" font-size="20px" fill="#fff"
+        transform="rotate(90, 50, 50)">
+        60
+      </text>
+    </svg>
+  </div>
+
+  <h2 class="heading">Hangman</h2>
+
+  <!-- Word Display -->
+  <div id="word-container">
+    <h3>Guess the word:</h3>
+    <p id="display-word"></p> 
+  </div>
+
+  <!-- Hangman Drawing -->
+  <div id="hangman-drawing">
+    <img id="hangman-image" src="/static/hangman1.png" alt="Hangman Stage 1" />
+  </div>
+
+  <!-- Input for Guessing Letters -->
+  <input type="text" id="guess" placeholder="Enter a letter" maxlength="1" />
+  <div class="button-container">
+    <button id="submit_guess">Submit</button>
+    <button id="skip_word">Skip</button> 
+  </div>
+
+  <!-- Feedback and Remaining Attempts -->
+  <p id="feedback"></p>
+  <p id="attempts-remaining"></p>
+
+  <!-- Leaderboard Section -->
+  <div id="leaderboard">
+    <h3>Leaderboard</h3>
+    <ul id="scoreboard"></ul>
+  </div>
+</div>
+
+<script type="text/javascript">
+  var socketio = io();
+  var attemptsRemaining = 6; // Number of wrong guesses allowed
+  var guessedLetters = []; // Track guessed letters
+
+  // Display the word with blanks for unguessed letters
+  socketio.on("new_word", (data) => {
+    const word = data.word;
+    const displayWord = word
+      .split("")
+      .map((letter) => (guessedLetters.includes(letter) ? letter : "_"))
+      .join(" ");
+    document.getElementById("display-word").innerText = displayWord;
+    document.getElementById("guess").value = ""; // Clear the input field
+    document.getElementById("feedback").innerText = ""; // Clear feedback
+    attemptsRemaining = 6; // Reset attempts
+    guessedLetters = []; // Reset guessed letters
+    updateHangmanArt(); // Reset hangman drawing
+    updateAttemptsDisplay(); // Update attempts display
+  });
+
+  // Show feedback after submitting a guess
+  socketio.on("feedback", (data) => {
+    document.getElementById("feedback").innerText = data.message;
+  });
+
+  // Update scoreboard
+  socketio.on("update_scores", (data) => {
+    const scoreboard = document.getElementById("scoreboard");
+    scoreboard.innerHTML = "";
+    for (const [player, score] of Object.entries(data.scores)) {
+      const listItem = document.createElement("li");
+      listItem.innerText = `${player}: ${score} points`;
+      scoreboard.appendChild(listItem);
+    }
+  });
+
+  // Handle letter guess submission
+  document.getElementById("submit_guess").addEventListener("click", () => {
+    const guess = document.getElementById("guess").value.toLowerCase();
+    if (guess && guess.length === 1 && /^[a-z]$/.test(guess)) {
+      if (!guessedLetters.includes(guess)) {
+        guessedLetters.push(guess);
+        socketio.emit("submit_guess", { guess: guess });
+      } else {
+        document.getElementById("feedback").innerText = "You already guessed that letter!";
+      }
+    } else {
+      document.getElementById("feedback").innerText = "Please enter a valid letter!";
+    }
+    document.getElementById("guess").value = ""; // Clear the input field
+  });
+
+  // Handle skipping the word
+  document.getElementById("skip_word").addEventListener("click", () => {
+    socketio.emit("skip_word");
+  });
+
+  // Update hangman drawing based on remaining attempts
+  function updateHangmanArt() {
+    const hangmanImage = document.getElementById("hangman-image");
+    const stage = 7 - attemptsRemaining; // Calculate the stage (1 to 7)
+    hangmanImage.src = `/static/hangman${stage}.png`; // Update the image source
+  }
+
+  // Update attempts display
+  function updateAttemptsDisplay() {
+    document.getElementById("attempts-remaining").innerText = `Attempts remaining: ${attemptsRemaining}`;
+  }
+
+  // Start the game when the page loads
+  socketio.emit("start_game");
+</script>
+
+<!-- Import External Timer Script -->
+<script src="{{ url_for('static', filename='js/timer.js') }}"></script>
+
+{% endblock %}
