@@ -2,17 +2,7 @@
 {% block content %}
 <div class="activity-board">
   <!-- Timer Display -->
-  <div class="timer-container">
-    <svg class="countdown-svg" width="80" height="80" viewBox="0 0 100 100">
-      <circle class="countdown-circle-bg" cx="50" cy="50" r="45"></circle>
-      <circle class="countdown-circle" cx="50" cy="50" r="45"></circle>
-      <text id="timer-text" x="50" y="55" text-anchor="middle" font-size="20px" fill="#fff"
-        transform="rotate(90, 50, 50)">
-        60
-      </text>
-    </svg>
-  </div>
-  
+  <div id="timer" class="timer">Time Left: 60s</div>
 
   <h2>Enter an activity you would like to have at your next hangout</h2>
   <div class="responses" id="responses">
@@ -37,6 +27,23 @@
   var socketio = io();
 
   const responses = document.getElementById("responses");
+  let timeLeft = 10; // Timer starts at 60 seconds
+  function updateTimer() {
+    document.getElementById("timer").innerText = `Time Left: ${timeLeft}s`;
+    if (timeLeft === 0) {
+      socketio.emit("time_up");  // Notify server that time is up
+    } else {
+      timeLeft--;
+      setTimeout(updateTimer, 1000); // Update every second
+    }
+  }
+
+  // Start the timer on page load
+  updateTimer();
+
+  socketio.on("redirect_to_vote", () => {
+    window.location.href = "/game";  // Redirect all clients
+  });
 
   const createResponse = (name, msg) => {
     const content = `
@@ -45,7 +52,6 @@
     </div>
     `;
     responses.innerHTML += content;
-    // Ensure the response bubbles are always in view
     responses.scrollTop = responses.scrollHeight;
   };
 
@@ -57,22 +63,8 @@
     const activity = document.getElementById("activity");
     if (activity.value == "") return;
     socketio.emit("response", { data: activity.value });
-    createResponse("You", activity.value); // Display the current user's input immediately
+    createResponse("You", activity.value);
     activity.value = "";
   };
 </script>
-
-<!-- Import External Timer Script -->
-<script src="{{ url_for('static', filename='js/timer.js') }}"></script>
-<script type="text/javascript">
-    var socketio = io();
-
-    // Listen for the redirect event from the server
-    socketio.on("redirect_to_vote", function () {
-        console.log("Redirecting to /game");  // Debugging log
-        window.location.href = "/game";  // Server-driven redirect
-    });
-</script>
-
-
 {% endblock %}

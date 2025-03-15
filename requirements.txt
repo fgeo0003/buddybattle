@@ -1,5 +1,5 @@
-# STEPS TO FOLLOW 
-# run python -m venv venv
+# RUN THE FOLLOWING IN TERMINAL
+# python -m venv venv
 # venv\Scripts\activate
 # pip install -r requirements.txt
 

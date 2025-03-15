@@ -71,36 +71,20 @@ def response(data):
     print(f"{session.get('name')} suggested: {data['data']}")
 
 @app.route("/game")
-def vote():
+def game():
     room = session.get("room")
     if not room or room not in rooms:
         return redirect(url_for("home"))
 
     return render_template("game.html")
 
-@socketio.on("activity")
-def handle_activity(data):
-    room = session.get("room")
-    if room not in rooms:
-        return 
-
-    activity = data["data"]
-    rooms[room]["activities"].append(activity)
-
-    emit("activity", {"message": activity}, to=room)
-    print(f"Activity submitted: {activity}")
-
 @socketio.on("time_up")
 def handle_time_up():
     room = session.get("room")
     if room in rooms:
-        emit("redirect_to_vote", {}, to=room)
-
-@socketio.on("request_activities")
-def send_activities():
-    room = session.get("room")
-    if room in rooms:
-        emit("load_activities", {"activities": rooms[room]["activities"]})
+        # Notify the client-side to redirect to the /game page
+        emit("redirect_to_vote", {}, room=room)
+        session.pop("room", None)
 
 
 

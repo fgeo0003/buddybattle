@@ -123,3 +123,30 @@ body {
 #send-btn:hover {
   background-color: #45a049;
 }
+
+.timer-container {
+  position: absolute;
+  top: 20px;  /* Adjust top distance */
+  left: 20px; /* Adjust left distance */
+  transform: none; /* Remove centering */
+}
+
+.countdown-svg {
+  transform: rotate(-90deg); /* Rotate to start from the top */
+}
+
+.countdown-circle-bg {
+  fill: none;
+  stroke: #444; /* Background stroke */
+  stroke-width: 10;
+}
+
+.countdown-circle {
+  fill: none;
+  stroke: #4caf50; /* Green countdown color */
+  stroke-width: 10;
+  stroke-dasharray: 283; /* Total circumference (2 * π * 45) */
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 0.1s linear;
+}
+
