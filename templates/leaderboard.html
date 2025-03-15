@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="leaderboard-container">
+    <h2>Leaderboard</h2>
+    <ul>
+        {% for player, score in scores.items() %}
+        <li>{{ player }}: {{ score }} points</li>
+        {% endfor %}
+    </ul>
+
+    <!-- Display elimination message -->
+    <div id="elimination-message" class="elimination-message">
+        {% if elimination_message %}
+        <p>{{ elimination_message }}</p>
+        {% endif %}
+    </div>
+
+    {% if is_winner %}
+    <div class="eliminate-idea">
+        <h3>You are the winner! Eliminate an idea:</h3>
+        <ul>
+            {% for message in rooms[room]["messages"] %}
+            <li>
+                {{ message.message }} (submitted by {{ message.name }})
+                <button onclick="eliminateIdea({{ loop.index0 }})">Eliminate</button>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% else %}
+    <p>Waiting for the winner to eliminate an idea...</p>
+    {% endif %}
+</div>
+
+<script type="text/javascript">
+    var socketio = io();
+
+    function eliminateIdea(index) {
+        socketio.emit("eliminate_idea", { idea_index: index });
+    }
+
+    // Handle the elimination message
+    socketio.on("idea_eliminated", (data) => {
+        const eliminationMessage = document.getElementById("elimination-message");
+        eliminationMessage.innerHTML = `<p>The idea "${data.eliminated_idea}" has been eliminated by ${data.winning_player}.</p>`;
+    });
+</script>
+{% endblock %}
+
