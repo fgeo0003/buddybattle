@@ -317,17 +317,100 @@ h2 {
 
 
 
+
 /* game_wordscramble */
+
 .game-box-ws {
   border-color: black;
   border-width: 2px;
   border-style: solid;
   border-radius: 10px; 
   background-color: rgba(245, 242, 237, 0.87);
-  height: 60vh;
+  height: 80vh;
   display: flex;
   flex-direction: column;
   width: 80vw;
   align-items: stretch;
   padding: 20px;
+}
+
+/* Timer container styling */
+.timer-container {
+  text-align: center; /* Center the timer */
+  margin-bottom: 20px; /* Add some spacing below the timer */
+}
+
+/* Scrambled word styling */
+#scrambled-word {
+  font-family: 'Comic Sans MS', cursive, sans-serif; /* Use Comic Sans */
+  font-size: 2rem; /* Larger font size */
+  text-align: center; /* Center the text */
+  margin: 20px 0; /* Add some vertical spacing */
+}
+
+/* Input field styling */
+#guess {
+  width: 80%; /* Make the input field narrower */
+  padding: 8px; /* Smaller padding */
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+  margin: 0 auto; /* Center the input field */
+  display: block; /* Ensure it takes up the full width */
+}
+
+/* Button container styling */
+.button-container {
+  display: flex;
+  gap: 10px; /* Space between buttons */
+  justify-content: center; /* Center the buttons */
+  margin-top: 20px; /* Add some spacing above the buttons */
+}
+
+/* Submit and Skip button styling */
+#submit_guess,
+#skip_word {
+  width: 40%; /* Make buttons narrower */
+  padding: 8px; /* Smaller padding */
+  border: none;
+  border-radius: 5px;
+  background-color: #4CAF50; /* Green button */
+  color: white;
+  font-size: 0.9rem; /* Slightly smaller font size */
+  cursor: pointer;
+}
+
+#skip_word {
+  background-color: #f44336; /* Red color for the Skip button */
+}
+
+#submit_guess:hover,
+#skip_word:hover {
+  opacity: 0.9; /* Slightly fade on hover */
+}
+
+/* Leaderboard styling */
+#leaderboard {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #f4f4f4;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+#leaderboard h3 {
+  margin-bottom: 10px;
+  font-size: 18px;
+  color: #333;
+}
+
+#scoreboard {
+  list-style-type: none;
+  padding: 0;
+}
+
+#scoreboard li {
+  padding: 5px 0;
+  font-size: 16px;
+  color: #555;
 }
