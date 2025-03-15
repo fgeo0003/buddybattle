@@ -130,12 +130,9 @@ def disconnect():
     send({"name": name, "message": "has left the room"}, to=room)
     print(f"{name} has left the room {room}")
 
-# ======= WORD SCRAMBLE GAME LOGIC ======= #
-
-def scramble_word(word):
-    scrambled = list(word)
-    random.shuffle(scrambled)
-    return "".join(scrambled)
+# ======= WORD MIX GAME LOGIC ======= #
+# Add a dictionary to track the number of skips used by each player
+skip_counts = {}
 
 @socketio.on("start_game")
 def start_game():
@@ -148,11 +145,16 @@ def start_game():
         players[room] = rooms[room].get("players", [])  # Get players from room
     if room not in scores:
         scores[room] = {player: 0 for player in players[room]}
+    if room not in skip_counts:
+        skip_counts[room] = {player: 0 for player in players[room]}
 
     current_player_idx[room] = 0
     next_turn(room)
-    current_player_idx[room] = 0
-    next_turn(room)
+
+def scramble_word(word):
+    scrambled = list(word)
+    random.shuffle(scrambled)
+    return "".join(scrambled)
 
 def next_turn(room):
     if room not in players or not players[room]:  
@@ -179,12 +181,39 @@ def check_answer(data):
     current_player = players[room][current_player_idx[room]]
 
     if guess == current_word[room]:
-        scores[room][current_player] += 5
+        # Determine points based on the number of attempts
+        attempts = data.get("attempts", 1)
+        if attempts == 1:
+            scores[room][current_player] += 5
+        elif attempts == 2:
+            scores[room][current_player] += 3
+        else:
+            scores[room][current_player] += 1
         emit("feedback", {"message": "Correct! Moving to next turn."}, to=room)
         current_player_idx[room] += 1
         next_turn(room)
     else:
         emit("feedback", {"message": "Wrong! Try again."}, to=room)
 
+@socketio.on("skip_word")
+def skip_word():
+    room = session.get("room")
+    if room not in rooms:
+        return
+    current_player = players[room][current_player_idx[room]]
+
+    if skip_counts[room][current_player] < 2:
+        skip_counts[room][current_player] += 1
+        emit("feedback", {"message": "Word skipped. Moving to next turn."}, to=room)
+        current_player_idx[room] += 1
+        next_turn(room)
+    else:
+        emit("feedback", {"message": "You have used all your skips."}, to=room)
+
 if __name__ == "__main__":
     socketio.run(app, debug=True)
+
+# code to add: 
+# at the end, display the words they skipped
+# once the timer runs out, clear the page and display a leaderboard with the player name and their score next to it 
+

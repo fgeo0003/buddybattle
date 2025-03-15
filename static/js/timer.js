@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
-    let timeLeft = 30;  // Starting time
-    const totalTime = 30; // Total countdown time
+    let timeLeft = 10;  // Starting time
+    const totalTime = 10; // Total countdown time
     const timerText = document.getElementById("timer-text");
     const countdownCircle = document.querySelector(".countdown-circle");
 

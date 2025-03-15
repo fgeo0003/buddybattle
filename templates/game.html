@@ -1,6 +1,5 @@
 {% extends 'base.html' %} {% block content %}
 <div class="game-board">
-
   <!-- Timer Display -->
   <div class="timer-container">
     <svg class="countdown-svg" width="80" height="80" viewBox="0 0 100 100">
@@ -18,11 +17,12 @@
   <div id="word-container">
     <h3 id="player-turn"></h3>
     <h3>Unscramble this word:</h3>
-    <p id="scrambled-word"></p> <!--this should display one the randonly chosen scarmbled words taken from app.py-->
+    <p id="scrambled-word"></p> 
   </div>
 
   <input type="text" id="guess" placeholder="Enter your guess" />
   <button id="submit-guess">Submit</button>
+  <button id="skip-word">Skip</button> <!-- Add Skip Button -->
 
   <p id="feedback"></p>
 
@@ -32,6 +32,7 @@
 
 <script type="text/javascript">
   var socketio = io();
+  var attempts = 1; // Track the number of attempts
 
   // Display the scrambled word
   socketio.on("new_word", (data) => {
@@ -40,7 +41,8 @@
     document.getElementById("player-turn").innerText = `${data.player}'s Turn`;
     document.getElementById("guess").value = "";
     document.getElementById("feedback").innerText = "";
-});
+    attempts = 1; // Reset attempts for the new word
+  });
 
   // Show feedback after submitting a guess
   socketio.on("feedback", (data) => {
@@ -60,12 +62,16 @@
 
   document.getElementById("submit-guess").addEventListener("click", () => {
     const guess = document.getElementById("guess").value;
-    socketio.emit("submit_guess", { guess: guess });
+    socketio.emit("submit_guess", { guess: guess, attempts: attempts });
+    attempts += 1; // Increment attempts
+  });
+
+  document.getElementById("skip-word").addEventListener("click", () => {
+    socketio.emit("skip_word");
   });
 
   socketio.emit("start_game"); // Request game start when page loads
 </script>
-
 
 <!-- Import External Timer Script -->
 <script src="{{ url_for('static', filename='js/timer.js') }}"></script>

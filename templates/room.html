@@ -70,9 +70,8 @@
     // Listen for the redirect event from the server
     socketio.on("redirect_to_vote", function () {
         console.log("Redirecting to /game");  // Debugging log
-        window.location.href = "/game";  // Server-driven redirect
+        window.location.href = "/game";  // Redirect to the game page
     });
 </script>
-
 
 {% endblock %}
