@@ -11,8 +11,7 @@ rooms = {}
 WORDS = ["python", "programming", "developer", "computer", "science", "algorithm"]
 players = {}
 scores = {}
-current_word = {}
-scrambled_word = {}
+player_words = {} 
 
 def generate_unique_code(length):
     while True:
@@ -101,11 +100,10 @@ def connect(auth):
     
     # Initialize players dictionary for the room if it doesn't exist
     if room not in players:
-        players[room] = []
+        players[room] = {}
     
-    # Add the player to the room if they're not already in the list
-    if name not in players[room]:
-        players[room].append(name)
+    # Add the player to the room with their session ID
+    players[room][name] = request.sid
     
     # Update room members count
     rooms[room]["members"] += 1
@@ -135,6 +133,9 @@ def disconnect():
         else:
             emit("player_count_update", {"current_players": rooms[room]["members"], "max_players": rooms[room]["max_players"]}, to=room)
     
+    if room in players and name in players[room]:
+        del players[room][name]  # Remove the player's session ID
+
     send({"name": name, "message": "has left the room"}, to=room)
     print(f"{name} has left the room {room}")
 
@@ -150,19 +151,47 @@ def start_game():
     if room not in rooms:
         return
 
+    print(f"Starting game in room: {room}")  # Debugging
+    print(f"Players in room {room}: {players.get(room, {})}")  # Debugging
+
     # Ensure players and scores exist for the room
     if room not in players or not players[room]:
+        print(f"No players in room: {room}")  # Debugging
         return
 
     if room not in scores:
         scores[room] = {player: 0 for player in players[room]}
     if room not in skip_counts:
         skip_counts[room] = {player: 0 for player in players[room]}
-    
-    # Generate the first word and emit it to the room
-    current_word[room] = random.choice(WORDS)
-    scrambled_word[room] = scramble_word(current_word[room])
-    emit("new_word", {"word": scrambled_word[room]}, to=room)
+
+    # Initialize player_words for the room if it doesn't exist
+    if room not in player_words:
+        player_words[room] = {}
+
+    # Shuffle the WORDS list to ensure unique starting words
+    shuffled_words = random.sample(WORDS, len(WORDS))
+
+    # Assign a unique word to each player
+    for idx, (player, sid) in enumerate(players[room].items()):
+        # Use modulo to cycle through the shuffled_words if there are more players than words
+        word_index = idx % len(shuffled_words)
+        current_word = shuffled_words[word_index]
+        scrambled_word = scramble_word(current_word)
+        player_words[room][player] = {
+            "current_word": current_word,
+            "scrambled_word": scrambled_word
+        }
+
+        # Emit the new word to the player using their session ID
+        emit("new_word", {
+            "word": scrambled_word,  # Send the scrambled word
+            "player": player
+        }, to=sid)
+
+        # Debugging: Print the assigned word and scrambled word
+        print(f"Player: {player}, Current Word: {current_word}, Scrambled Word: {scrambled_word}")
+
+    print(f"Player words in room {room}: {player_words[room]}")  # Debugging
 
 
 def scramble_word(word):
@@ -179,35 +208,55 @@ def check_answer(data):
 
     guess = data["guess"].strip()
     submitting_player = session.get("name")  # Get the name of the player submitting the guess
-    player_sid = request.sid  # Get the session ID of the player
 
     # Ensure the submitting player is in the room
     if submitting_player not in players[room]:
-        emit("feedback", {"message": "You are not in this room!"}, to=player_sid)
+        emit("feedback", {"message": "You are not in this room!"}, to=request.sid)
         return
 
-    if guess == current_word[room]:
+    # Ensure the player's words are initialized
+    if room not in player_words or submitting_player not in player_words[room]:
+        emit("feedback", {"message": "Your game data is not initialized. Please restart the game."}, to=request.sid)
+        return
+
+    # Get the player's current word
+    current_word = player_words[room][submitting_player]["current_word"]
+    scrambled_word = player_words[room][submitting_player]["scrambled_word"]
+
+    # Debugging: Print the player's current word and guess
+    print(f"Player: {submitting_player}, Current Word: {current_word}, Guess: {guess}")
+
+    if guess == current_word:
         # Determine points based on the number of attempts
         attempts = data.get("attempts", 1)
         if attempts == 1:
-            scores[room][submitting_player] += 5  # Update the submitting player's score
+            scores[room][submitting_player] += 5
         elif attempts == 2:
             scores[room][submitting_player] += 3
         else:
             scores[room][submitting_player] += 1
 
-        # Emit the updated scores to all players
+        # Emit the updated scores
         emit("update_scores", {"scores": scores[room]}, to=room)
 
         # Notify the player that the guess was correct
-        emit("feedback", {"message": f"Correct! {submitting_player} earns points."}, to=player_sid)
+        emit("feedback", {"message": "Correct! Moving to the next word."}, to=request.sid)
 
-        # Generate a new word and emit it only to the submitting player
-        current_word[room] = random.choice(WORDS)
-        scrambled_word[room] = scramble_word(current_word[room])
-        emit("new_word", {"word": scrambled_word[room]}, to=player_sid)
+        # Generate a new word for the player
+        new_word = random.choice(WORDS)
+        new_scrambled_word = scramble_word(new_word)
+        player_words[room][submitting_player] = {
+            "current_word": new_word,
+            "scrambled_word": new_scrambled_word
+        }
+
+        # Emit the new word to the player using their session ID
+        emit("new_word", {
+            "word": new_scrambled_word,  # Send the scrambled word
+            "player": submitting_player
+        }, to=players[room][submitting_player])
     else:
-        emit("feedback", {"message": "Wrong! Try again."}, to=player_sid)
+        emit("feedback", {"message": "Wrong! Try again."}, to=request.sid)
 
 @socketio.on("skip_word")
 def skip_word():
@@ -232,10 +281,19 @@ def skip_word():
         skip_counts[room][submitting_player] += 1  # Increment the player's skip count
         emit("feedback", {"message": f"Word skipped. You have {2 - skip_counts[room][submitting_player]} skips left."}, to=player_sid)
 
-        # Generate a new word and emit it only to the player who skipped
-        current_word[room] = random.choice(WORDS)
-        scrambled_word[room] = scramble_word(current_word[room])
-        emit("new_word", {"word": scrambled_word[room]}, to=player_sid)
+        # Generate a new word for the player
+        new_word = random.choice(WORDS)
+        new_scrambled_word = scramble_word(new_word)
+        player_words[room][submitting_player] = {
+            "current_word": new_word,
+            "scrambled_word": new_scrambled_word
+        }
+
+        # Emit the new word to the player
+        emit("new_word", {
+            "word": new_scrambled_word,
+            "player": submitting_player
+        }, to=player_sid)
     else:
         emit("feedback", {"message": "You have used all your skips."}, to=player_sid)
 
