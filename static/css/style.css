@@ -538,7 +538,7 @@ button:hover {
 
 /* Winner image styling */
 .winner-image {
-  width: 50%; /* Resize image to half its original size */
+  width: 25%; /* Resize image to half its original size */
   height: auto; /* Maintain aspect ratio */
   margin-bottom: 20px; /* Add spacing below the image */
   display: block; /* Ensure the image behaves as a block element */
