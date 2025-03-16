@@ -257,6 +257,17 @@ def notify_winning_player(room):
         "submissions": rooms[room]["messages"]
     }, to=request.sid)
 
+@app.route("/finalscreen")
+def finalscreen():
+    room = session.get("room")
+    if room is None or room not in rooms:
+        return redirect(url_for("home"))
+
+    # Get the final idea
+    final_idea = rooms[room]["messages"][0]["message"] if rooms[room]["messages"] else "No ideas remaining."
+
+    return render_template("finalscreen.html", final_idea=final_idea)
+
 @socketio.on("eliminate_idea")
 def eliminate_idea(data):
     room = session.get("room")
@@ -283,8 +294,26 @@ def eliminate_idea(data):
     # Broadcast the eliminated idea to all players
     emit("idea_eliminated", {
         "winning_player": winning_player,
-        "eliminated_idea": eliminated_idea["message"]
+        "eliminated_idea": eliminated_idea["message"],
+        "remaining_ideas": len(rooms[room]["messages"])  # Send the number of remaining ideas
     }, to=room)
+
+
+def check_remaining_ideas(room):
+    if room not in rooms:
+        return
+
+    remaining_ideas = len(rooms[room]["messages"])
+    emit("remaining_ideas", {"remaining_ideas": remaining_ideas}, to=room)
+
+@socketio.on("check_remaining_ideas")
+def handle_check_remaining_ideas():
+    room = session.get("room")
+    if room not in rooms:
+        return
+
+    check_remaining_ideas(room)
+
 
 @app.route("/leaderboard")
 def leaderboard():
@@ -340,6 +369,29 @@ def handle_start_battle():
     print(f"Redirecting to: {game_url}")  # Debugging: Print the URL
     emit("redirect_to_game", {"url": game_url}, to=room)
     session.pop("room", None)
+
+
+@socketio.on("battle_outcome")
+def handle_battle_outcome():
+    room = session.get("room")
+    if room not in rooms:
+        return
+
+    final_url = url_for("finalscreen")
+    print(f"Redirecting to: {final_url}")  # Debugging: Print the URL
+    emit("redirect_to_finalscreen", {"url": final_url}, to=room)
+    session.pop("room", None)
+
+
+@socketio.on("continue_battle")
+def handle_continue_battle():
+    room = session.get("room")
+    if room not in rooms:
+        return
+
+    game_url = url_for("game")  # Generate the URL for the game page
+    emit("redirect_to_game", {"url": game_url}, to=room)  # Broadcast to all users in the room
+
 
 
 if __name__ == "__main__":

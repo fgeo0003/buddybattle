@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="finalscreen-container">
+    <h2 class="heading">Battle Outcome</h2>
+    <div class="final-idea">
+        <!-- Centered Image -->
+        <img src="/static/pirate_winner.png" alt="Pirate Winner" class="winner-image">
+        
+        <!-- Final Idea Text -->
+        <h3 class="final-idea-text">The Winning Idea:</h3>
+        <p class="final-idea-text">{{ final_idea }}</p>
+    </div>
+</div>
+{% endblock %}

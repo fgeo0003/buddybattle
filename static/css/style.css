@@ -461,6 +461,34 @@ button:hover {
   opacity: 0.9; /* Slightly fade on hover */
 }
 
+#battle-buttons {
+  text-align: center; /* Center the buttons */
+  margin-top: 20px; /* Add some spacing */
+}
+
+/* Button styling */
+#continue-battle,
+#battle-outcome {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  background-color: #4CAF50; /* Green button */
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  margin: 10px;
+}
+
+#battle-outcome {
+  background-color: #f44336; /* Red button for Battle Outcome */
+}
+
+#continue-battle:hover,
+#battle-outcome:hover {
+  opacity: 0.9; /* Slightly fade on hover */
+}
+
+
 
 /* game_hangman */
 
@@ -489,3 +517,46 @@ button:hover {
   height: auto; /* Maintain aspect ratio */
 }
 
+
+
+
+/* Final screen styling */
+.finalscreen-container {
+  border: 2px solid black; /* Combined border properties */
+  border-radius: 10px;
+  background-color: rgba(245, 242, 237, 0.87);
+  height: 80vh;
+  width: 80vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center content horizontally */
+  justify-content: center; /* Center content vertically */
+  padding: 20px;
+  box-sizing: border-box; /* Ensure padding is included in the container's dimensions */
+  overflow: hidden; /* Prevent content from overflowing */
+}
+
+/* Winner image styling */
+.winner-image {
+  width: 50%; /* Resize image to half its original size */
+  height: auto; /* Maintain aspect ratio */
+  margin-bottom: 20px; /* Add spacing below the image */
+  display: block; /* Ensure the image behaves as a block element */
+  margin-left: auto; /* Center horizontally */
+  margin-right: auto; /* Center horizontally */
+}
+
+/* Final idea text styling */
+.final-idea-text {
+  font-family: 'Comic Sans MS', cursive, sans-serif;
+  font-size: 2rem;
+  color: #333;
+  text-align: center; /* Center-align text */
+  margin: 10px 0; /* Add spacing */
+}
+
+.final-idea-text p {
+  font-size: 1.5rem;
+  color: #555;
+  margin: 0; /* Remove default margin for paragraphs */
+}

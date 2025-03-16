@@ -25,8 +25,7 @@
             {% for message in rooms[room]["messages"] %}
             <li>
                 {{ message.message }} 
-                <!-- (submitted by {{ message.name }}) -->
-                <button onclick="eliminateIdea({{ loop.index0 }})">Eliminate</button>
+                <button id="eliminate-button-{{ loop.index0 }}" onclick="eliminateIdea({{ loop.index0 }})">Eliminate</button>
             </li>
             {% endfor %}
         </ul>
@@ -34,6 +33,12 @@
     {% else %}
     <p>Waiting for the winner to eliminate an idea...</p>
     {% endif %}
+
+    <!-- Continue Battle or Battle Outcome Button -->
+    <div id="battle-action" style="display: none; text-align: center; margin-top: 20px;">
+        <button id="continue-battle" style="display: none;">Continue Battle</button>
+        <button id="battle-outcome" style="display: none;">Battle Outcome</button>
+    </div>
 </div>
 
 <script type="text/javascript">
@@ -47,6 +52,49 @@
     socketio.on("idea_eliminated", (data) => {
         const eliminationMessage = document.getElementById("elimination-message");
         eliminationMessage.innerHTML = `<p>The idea "${data.eliminated_idea}" has been eliminated by ${data.winning_player}.</p>`;
+
+        // Disable all "Eliminate" buttons
+        document.querySelectorAll('[id^="eliminate-button-"]').forEach(button => {
+            button.disabled = true;
+        });
+
+        // Show the appropriate button based on the number of remaining ideas
+        const battleAction = document.getElementById("battle-action");
+        const continueBattleButton = document.getElementById("continue-battle");
+        const battleOutcomeButton = document.getElementById("battle-outcome");
+
+        if (data.remaining_ideas > 1) {
+            continueBattleButton.style.display = "inline-block";
+            battleOutcomeButton.style.display = "none";
+        } else {
+            continueBattleButton.style.display = "none";
+            battleOutcomeButton.style.display = "inline-block";
+        }
+        battleAction.style.display = "block";
+    });
+
+    // Listen for redirect to game.html
+    socketio.on("redirect_to_game", (data) => {
+        console.log("Received redirect event to game:", data);  // Debugging: Log the event
+        window.location.href = data.url;  // Redirect to the game page
+    });
+    
+    // Handle the "Continue Battle" button click
+    document.getElementById("continue-battle").addEventListener("click", () => {
+        console.log("Continue battle button clicked");  // Debugging: Log button click
+        socketio.emit("continue_battle");  // Emit the event to the server
+    });
+
+    // Handle "Battle Outcome" button click
+    document.getElementById("battle-outcome").addEventListener("click", () => {
+        console.log("Battle outcome button clicked");  // Debugging: Log button click
+        socketio.emit("battle_outcome");  // Emit the event to the server
+    });
+
+    // Listen for redirect to finalscreen.html
+    socketio.on("redirect_to_finalscreen", (data) => {
+        console.log("Received redirect event:", data);  // Debugging: Log the event
+        window.location.href = data.url;
     });
 </script>
 {% endblock %}
